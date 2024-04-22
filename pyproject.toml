@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lam-crystal-philately"
+dynamic = ["version"]
+description = "A crystal structure optimization tool built on top of ASE"
+authors = [
+  {name = "DP Technology"},
+]
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+]
+dependencies = [
+    'pydflow>=1.7.23',
+    'ase==3.22.1',
+    'numpy==1.26.4',
+    'tqdm==4.66.2',
+    'pymatgen==2024.3.1',
+]
+requires-python = ">=3.8"
+readme = "README.md"
+keywords = ["crystal structure optimization"]
+
+[project.optional-dependencies]
+dp = ["deepmd-kit==3.0.0a0", "torch==2.2.1"]
+mace = ["mace-torch==0.3.4", "torch==2.2.1"]
+
+[project.urls]
+repository = "https://github.com/deepmodeling/lam-crystal-philately"
+
+[project.scripts]
+lam-opt = "lam_optimize.entrypoint:main"
+
+[tool.setuptools.packages.find]
+include = ["lam_optimize*"]
+
+[tool.setuptools_scm]
+write_to = "lam_optimize/_version.py"
+
+[tool.cibuildwheel]
+test-command = ["lam-opt -h",]

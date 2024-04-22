@@ -1,0 +1,7 @@
+ase==3.22.1
+deepmd-kit==3.0.0a0
+mace-torch==0.3.4
+numpy==1.26.4
+torch==2.2.1
+tqdm==4.66.2
+pymatgen==2024.3.1
