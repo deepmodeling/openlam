@@ -4,7 +4,7 @@ from typing import List, Literal, Optional
 import lam_optimize
 from dflow import Step, Workflow, upload_artifact
 from dflow.plugins.dispatcher import DispatcherExecutor
-from dflow.python import OP, Artifact, PythonOPTemplate, Slices
+from dflow.python import OP, Artifact, Parameter, PythonOPTemplate, Slices
 from lam_optimize.main import relax_run
 from lam_optimize.relaxer import Relaxer
 
@@ -14,12 +14,13 @@ def relax(
         cif_folder: Artifact(Path),
         type: str,
         model: Artifact(Path, optional=True),
+        config: Parameter(dict, default={}),
 ) -> {"res": Artifact(Path)}:
     if type == "DP":
         relaxer = Relaxer(model)
     elif type == "mace":
         relaxer = Relaxer("mace")
-    res_df = relax_run(cif_folder, relaxer)
+    res_df = relax_run(cif_folder, relaxer, **config)
     res_df.to_json("results.json")
     return {"res": Path("results.json")}
 
@@ -51,6 +52,7 @@ def get_relax_workflow(
         ),
         parameters={
             "type": type,
+            "config": config.get("relax_config", {}),
         },
         artifacts={
             "cif_folder": cif_art,

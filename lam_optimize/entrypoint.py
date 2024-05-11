@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from typing import List, Optional
 
+from dflow import Workflow, download_artifact
 from lam_optimize.main import relax_run
 from lam_optimize.relaxer import Relaxer
 from lam_optimize.workflow import get_relax_workflow
@@ -84,6 +85,22 @@ def main_parser():
         help="model path",
     )
 
+    parser_download = subparsers.add_parser(
+        "download",
+        help="Download results from a relax workflow",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_download.add_argument(
+        "ID",
+        help="workflow ID",
+    )
+    parser_download.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=".",
+        help="output path",
+    )
     return parser
 
 
@@ -118,6 +135,10 @@ def main():
             config = json.load(f)
         wf = get_relax_workflow(config["relax"], args.input, args.type, args.model)
         wf.submit()
+    elif args.command == "download":
+        wf = Workflow(id=args.ID)
+        step = wf.query_step(name="relax", phase="Succeeded")[0]
+        download_artifact(step.outputs.artifacts["res"], path=args.output)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,12 @@ or mace
 pip install ".[mace]"
 ```
 
+Download the latest DP model for structure optimization by
+```
+wget https://bohrium-api.dp.tech/ds-dl/lam-crystal-model-01oe-v2.zip
+unzip lam-crystal-model-01oe-v2.zip
+```
+
 
 ## Structure Optimization
 
@@ -70,7 +76,7 @@ where the arguments after `-i` should be a list of directories containing cifs.
 ## Single Point Evaluation
 
 ```
-from main import single_point
+from lam_optimize.main import single_point
 
 single_point(Path(fpth), relaxer)
 

@@ -9,9 +9,14 @@ from pathlib import Path
 from pymatgen.core import Structure
 from tqdm import tqdm
 import os
+import signal
 
 
-def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, traj_file:Path=None):
+def sigalrm_handler(signum, frame):
+    raise TimeoutError("Timeout to relax")
+
+
+def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, traj_file:Path=None, timeout: int=None):
     """
     This is the main relaxation function
 
@@ -39,6 +44,9 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
             logging.info(f"CIF error: {repr(e)}")
             structure = None
         if structure is not None:
+            if timeout is not None:
+                signal.signal(signal.SIGALRM, sigalrm_handler)
+                signal.alarm(timeout)
             try:
                 if traj_file is not None:
                     outpath = str(os.path.join(str(traj_file),fn ))
@@ -52,6 +60,9 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
 
             except Exception as exc:
                     logging.info(f"Failed to relax {fn}: {exc!r}")
+            finally:
+                if timeout is not None:
+                    signal.alarm(0)
         else:
             pass
     df_out = pd.DataFrame(relax_results).T
