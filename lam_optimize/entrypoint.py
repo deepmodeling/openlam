@@ -128,7 +128,7 @@ def main():
             relaxer = Relaxer(Path(args.model))
         elif args.type == "mace":
             relaxer = Relaxer("mace")
-        res_df = relax_run(args.input, relaxer)
+        res_df = relax_run(Path(args.input), relaxer)
         res_df.to_json(args.output)
     elif args.command == "submit":
         with open(args.CONFIG, "r") as f:
