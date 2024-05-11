@@ -1,6 +1,6 @@
 {
     "relax": {
-        "image": "<the-relax-image>",
+        "image": "registry.dp.tech/dptech/prod-26832/lam-crystal-philately:dp-mptraj-ase-utype",
         "executor": {
             "image_pull_policy": "IfNotPresent",
             "machine_dict": {

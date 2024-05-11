@@ -62,6 +62,6 @@ def get_relax_workflow(
         with_param=range(len(cif_folders)),
         **config.get("step_config", {}),
     )
-    wf = Workflow("parallel-relax")
+    wf = Workflow(config.get("name", "parallel-relax"))
     wf.add(step)
     return wf
