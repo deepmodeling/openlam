@@ -15,6 +15,12 @@ or mace
 pip install ".[mace]"
 ```
 
+Download the latest DP model for structure optimization by
+```
+wget https://bohrium-api.dp.tech/ds-dl/lam-crystal-model-01oe-v2.zip
+unzip lam-crystal-model-01oe-v2.zip
+```
+
 
 ## Structure Optimization
 
@@ -70,7 +76,7 @@ where the arguments after `-i` should be a list of directories containing cifs.
 ## Single Point Evaluation
 
 ```
-from main import single_point
+from lam_optimize.main import single_point
 
 single_point(Path(fpth), relaxer)
 
@@ -78,3 +84,45 @@ single_point(Path(fpth), relaxer)
 This returns the potential energy and forces for a given `.cif` structure.
 
 <img width="568" alt="image" src="https://github.com/deepmodeling/lam-crystal-philately/assets/137014849/6917528d-7e2a-4dc0-a49a-a87825983fba">
+
+
+# Query crystal structures from OpenLAM Database
+
+Set environmental variable `BOHRIUM_ACCESS_KEY` which is generated from https://bohrium.dp.tech/settings/user
+```
+export BOHRIUM_ACCESS_KEY=xxx
+```
+Query crystal structures from OpenLAM Database using Python API
+```python
+from lam_optimize import CrystalStructure
+data = CrystalStructure.query_by_page()
+```
+The method `query_by_page` accept following arguments as query conditions
+```python
+formula: Optional[str] = None
+min_energy: Optional[float] = None
+max_energy: Optional[float] = None
+min_submission_time: Optional[datetime.datetime] = None
+max_submission_time: Optional[datetime.datetime] = None
+page: int = 1
+```
+The structure of the returned data is like
+```
+{'page': 1, 'pageSize': 10, 'total': 59, 'items': [<__main__.CrystalStructure object at 0x7f84bb5319a0>, <__main__.CrystalStructure object at 0x7f84a9623850>, <__main__.CrystalStructure object at 0x7f84bb54eb20>, <__main__.CrystalStructure object at 0x7f84bb54edc0>, <__main__.CrystalStructure object at 0x7f84bb56f4f0>, <__main__.CrystalStructure object at 0x7f84bb56fbe0>, <__main__.CrystalStructure object at 0x7f84bb574310>, <__main__.CrystalStructure object at 0x7f84bb574a30>, <__main__.CrystalStructure object at 0x7f84bb583940>, <__main__.CrystalStructure object at 0x7f8478019dc0>]}
+```
+Except for the paging information, `items` is a list of `CrystalStructure` objects
+```python
+class CrystalStructure:
+    formula: str
+    structure: pymatgen.core.Structure
+    energy: float
+    submission_time: datetime.datetime
+```
+
+The method `query` merging paged results is also provided
+```python
+structures = CrystalStructure.query(formula="Sr2YSbO6")
+```
+which returns a list of `CrystalStructure` objects.
+
+NOTE: Calling non-paging method without query condition will be extremely slow.

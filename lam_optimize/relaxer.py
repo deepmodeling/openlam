@@ -51,7 +51,7 @@ class Relaxer:
         elif model == "mace":
             import torch
             from mace.calculators import mace_mp
-            device = "cuda" if torch.cuda().is_available() else "cpu"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
             MACE_CALC = mace_mp(model="medium", device=device, default_dtype="float64")
             self.calculator=MACE_CALC
         else:
