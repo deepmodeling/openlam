@@ -52,7 +52,7 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
                     outpath = str(os.path.join(str(traj_file),fn ))
                 else:
                     outpath = None
-                result = relaxer.relax(structure, fmax=1e-4, steps=steps, traj_file=outpath)
+                result = relaxer.relax(structure, fmax=fmax, steps=steps, traj_file=outpath)
                 relax_results[fn] = {
                     f"final_structure": result["final_structure"],
                     "final_energy": result["trajectory"].energies[-1],
