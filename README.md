@@ -17,8 +17,8 @@ pip install ".[mace]"
 
 Download the latest DP model for structure optimization by
 ```
-wget https://bohrium-api.dp.tech/ds-dl/lam-crystal-model-01oe-v2.zip
-unzip lam-crystal-model-01oe-v2.zip
+wget https://bohrium-api.dp.tech/ds-dl/lam-crystal-model-01oe-v3.zip
+unzip lam-crystal-model-01oe-v3.zip
 ```
 
 
