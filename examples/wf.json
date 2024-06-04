@@ -1,6 +1,6 @@
 {
     "inputs": {
-        "check_convergence": true
+        "check_convergence": false
     },
     "relax": {
         "image": "registry.dp.tech/dptech/prod-26832/lam-crystal-philately:dp-mptraj-ase-utype",
