@@ -1,8 +1,9 @@
+import os
 from pathlib import Path
 from typing import List, Literal, Optional
 
 import lam_optimize
-from dflow import Step, Workflow, upload_artifact
+from dflow import Secret, Step, Workflow, upload_artifact
 from dflow.plugins.dispatcher import DispatcherExecutor
 from dflow.python import OP, Artifact, Parameter, PythonOPTemplate, Slices
 from lam_optimize.main import relax_run
@@ -15,14 +16,14 @@ def relax(
         type: str,
         model: Artifact(Path, optional=True),
         config: Parameter(dict, default={}),
-) -> {"res": Artifact(Path)}:
+) -> {"res": Artifact(Path), "relaxed_cifs": Artifact(Path)}:
     if type == "DP":
         relaxer = Relaxer(model)
     elif type == "mace":
         relaxer = Relaxer("mace")
     res_df = relax_run(cif_folder, relaxer, **config)
     res_df.to_json("results.json")
-    return {"res": Path("results.json")}
+    return {"res": Path("results.json"), "relaxed_cifs": Path("relaxed")}
 
 
 def get_relax_workflow(
@@ -36,6 +37,11 @@ def get_relax_workflow(
     executor = config.get("executor")
     if executor is not None:
         executor = DispatcherExecutor(**executor)
+    envs = {}
+    if os.environ.get("OPENLAM_STRUCTURE_QUERY_URL"):
+        envs["OPENLAM_STRUCTURE_QUERY_URL"] = os.environ.get("OPENLAM_STRUCTURE_QUERY_URL")
+    if os.environ.get("BOHRIUM_ACCESS_KEY"):
+        envs["BOHRIUM_ACCESS_KEY"] = Secret(os.environ.get("BOHRIUM_ACCESS_KEY"))
     step = Step(
         name="relax",
         template=PythonOPTemplate(
@@ -44,15 +50,16 @@ def get_relax_workflow(
             python_packages=lam_optimize.__path__,
             slices=Slices(
                 input_artifact=["cif_folder"],
-                output_artifact=["res"],
+                output_artifact=["res", "relaxed_cifs"],
                 create_dir=True,
                 **config.get("slices_config", {}),
             ),
+            envs=envs,
             **config.get("template_config", {}),
         ),
         parameters={
             "type": type,
-            "config": config.get("relax_config", {}),
+            "config": config.get("inputs", {}),
         },
         artifacts={
             "cif_folder": cif_art,
