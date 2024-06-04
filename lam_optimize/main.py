@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import ase.io
+from lam_optimize.db import CrystalStructure
 from lam_optimize.relaxer import Relaxer
+from lam_optimize.utils import get_e_form_per_atom, MATCHER
 import logging
+import numpy as np
 import pandas as pd
 from pathlib import Path
 from pymatgen.core import Structure
+from pymatgen.io.ase import AseAtomsAdaptor
 from tqdm import tqdm
 import os
 import signal
@@ -16,7 +21,7 @@ def sigalrm_handler(signum, frame):
     raise TimeoutError("Timeout to relax")
 
 
-def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, traj_file:Path=None, timeout: int=None):
+def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, traj_file: Path=None, timeout: int=None, check_convergence: bool=True, check_duplicate: bool=True):
     """
     This is the main relaxation function
 
@@ -41,7 +46,7 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
         try:
             structure = Structure.from_file(cif)
         except Exception as e:
-            logging.info(f"CIF error: {repr(e)}")
+            logging.warn(f"CIF error: {repr(e)}")
             structure = None
         if structure is not None:
             if timeout is not None:
@@ -59,7 +64,7 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
                 }
 
             except Exception as exc:
-                    logging.info(f"Failed to relax {fn}: {exc!r}")
+                    logging.warn(f"Failed to relax {fn}: {exc!r}")
             finally:
                 if timeout is not None:
                     signal.alarm(0)
@@ -67,6 +72,50 @@ def relax_run(fpth:Path, relaxer: Relaxer, fmax: float=1e-4, steps:int = 200, tr
             pass
     df_out = pd.DataFrame(relax_results).T
     print("\nSaved to df.\n")
+
+    atoms_list = []
+    for i in df_out.index:
+        atoms = AseAtomsAdaptor.get_atoms(Structure.from_dict(df_out.loc[i, "final_structure"]))
+        atoms_list.append(atoms)
+
+    if check_convergence:
+        new_atoms_list = []
+        for atoms in atoms_list:
+            atoms.calc = relaxer.calculator
+            if get_e_form_per_atom(atoms, atoms.get_potential_energy()) > 0:
+                logging.warn("%s: energy not relaxed" % atoms.symbols)
+            elif np.max(abs(atoms.get_forces())) > 0.05:
+                logging.warn("%s: forces not relaxed" % atoms.symbols)
+            else:
+                new_atoms_list.append(atoms)
+        atoms_list = new_atoms_list
+
+    if check_duplicate:
+        new_atoms_list = []
+        for atoms in atoms_list:
+            atoms.calc = relaxer.calculator
+            energy = atoms.get_potential_energy()
+            structure = AseAtomsAdaptor.get_structure(atoms)
+            formula = structure.reduced_formula
+            for known_structure in CrystalStructure.query(formula=formula):
+                if (
+                    abs(known_structure.energy - energy)
+                    / max(abs(known_structure.energy), abs(energy))
+                    > 0.05
+                ):
+                    continue
+                else:
+                    if MATCHER.fit(known_structure.structure, structure):
+                        logging.warn("%s: duplicate structure" % atoms.symbols)
+                        break
+            else:
+                new_atoms_list.append(atoms)
+        atoms_list = new_atoms_list
+
+    os.makedirs("relaxed", exist_ok=True)
+    for atoms in atoms_list:
+        ase.io.write(f"relaxed/final-{atoms.symbols}.cif", atoms, format='cif')
+
     return df_out
 
 def single_point(fpth:Path, relaxer: Relaxer):

@@ -45,6 +45,16 @@ def main_parser():
         help="model path",
     )
     parser_relax.add_argument(
+        "--skip-check-convergence",
+        action="store_true",
+        help="skip checking convergence",
+    )
+    parser_relax.add_argument(
+        "--skip-check-duplicate",
+        action="store_true",
+        help="skip checking duplicate",
+    )
+    parser_relax.add_argument(
         "-o",
         "--output",
         type=str,
@@ -83,6 +93,16 @@ def main_parser():
         type=str,
         default=None,
         help="model path",
+    )
+    parser_submit.add_argument(
+        "--skip-check-convergence",
+        action="store_true",
+        help="skip checking convergence",
+    )
+    parser_submit.add_argument(
+        "--skip-check-duplicate",
+        action="store_true",
+        help="skip checking duplicate",
     )
 
     parser_download = subparsers.add_parser(
@@ -128,7 +148,8 @@ def main():
             relaxer = Relaxer(Path(args.model))
         elif args.type == "mace":
             relaxer = Relaxer("mace")
-        res_df = relax_run(Path(args.input), relaxer)
+        res_df = relax_run(Path(args.input), relaxer, check_convergence=(not args.skip_check_convergence),
+                           check_duplicate=(not args.skip_check_duplicate))
         res_df.to_json(args.output)
     elif args.command == "submit":
         with open(args.CONFIG, "r") as f:
@@ -139,6 +160,7 @@ def main():
         wf = Workflow(id=args.ID)
         step = wf.query_step(name="relax", phase="Succeeded")[0]
         download_artifact(step.outputs.artifacts["res"], path=args.output)
+        download_artifact(step.outputs.artifacts["relaxed_cifs"], path=args.output)
 
 
 if __name__ == "__main__":
