@@ -87,10 +87,10 @@ def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, tr
             atoms.calc = relaxer.calculator
             if get_e_form_per_atom(atoms, atoms.get_potential_energy()) > 0:
                 logging.warn("%s: energy not relaxed" % atoms.symbols)
-                unconverged.append(Structure.from_dict(df_out.loc[i, "initial_structure"]))
+                unconverged.append(Structure.from_dict(df_out.loc[df_out.index[i], "initial_structure"]))
             elif np.max(abs(atoms.get_forces())) > 0.05:
                 logging.warn("%s: forces not relaxed" % atoms.symbols)
-                unconverged.append(Structure.from_dict(df_out.loc[i, "initial_structure"]))
+                unconverged.append(Structure.from_dict(df_out.loc[df_out.index[i], "initial_structure"]))
             else:
                 new_atoms_list.append(atoms)
         atoms_list = new_atoms_list
