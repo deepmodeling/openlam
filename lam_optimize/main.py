@@ -61,7 +61,7 @@ def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, tr
                 relax_results[fn] = {
                     f"final_structure": result["final_structure"],
                     "final_energy": result["trajectory"].energies[-1],
-                    "initial_structure": structure.to_dict(),
+                    "initial_structure": structure.as_dict(),
                 }
 
             except Exception as exc:
