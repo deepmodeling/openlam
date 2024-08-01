@@ -16,14 +16,22 @@ def relax(
         type: str,
         model: Artifact(Path, optional=True),
         config: Parameter(dict, default={}),
-) -> {"res": Artifact(Path), "relaxed_cifs": Artifact(Path)}:
+) -> {
+    "res": Artifact(Path),
+    "relaxed_cifs": Artifact(Path),
+    "unconverged_cifs": Artifact(Path),
+}:
     if type == "DP":
         relaxer = Relaxer(model)
     elif type == "mace":
         relaxer = Relaxer("mace")
     res_df = relax_run(cif_folder, relaxer, **config)
     res_df.to_json("results.json")
-    return {"res": Path("results.json"), "relaxed_cifs": Path("relaxed")}
+    return {
+        "res": Path("results.json"),
+        "relaxed_cifs": Path("relaxed"),
+        "unconverged_cifs": Path("unconverged"),
+    }
 
 
 def get_relax_workflow(
