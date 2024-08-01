@@ -161,6 +161,7 @@ def main():
         step = wf.query_step(name="relax", phase="Succeeded")[0]
         download_artifact(step.outputs.artifacts["res"], path=args.output)
         download_artifact(step.outputs.artifacts["relaxed_cifs"], path=args.output)
+        download_artifact(step.outputs.artifacts["unconverged_cifs"], path=args.output)
 
 
 if __name__ == "__main__":

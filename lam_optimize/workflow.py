@@ -58,7 +58,7 @@ def get_relax_workflow(
             python_packages=lam_optimize.__path__,
             slices=Slices(
                 input_artifact=["cif_folder"],
-                output_artifact=["res", "relaxed_cifs"],
+                output_artifact=["res", "relaxed_cifs", "unconverged_cifs"],
                 create_dir=True,
                 **config.get("slices_config", {}),
             ),
