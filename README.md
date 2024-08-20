@@ -92,25 +92,26 @@ Set environmental variable `BOHRIUM_ACCESS_KEY` which is generated from https://
 ```
 export BOHRIUM_ACCESS_KEY=xxx
 ```
-Query crystal structures from OpenLAM Database using Python API
+Query crystal structures from OpenLAM Database using Python API (The method `query_by_page` is deprecated! Use `query_by_offset` instead.)
 ```python
 from lam_optimize import CrystalStructure
-data = CrystalStructure.query_by_page()
+data = CrystalStructure.query_by_offset()
 ```
-The method `query_by_page` accept following arguments as query conditions
+The method `query_by_offset` accept following arguments as query conditions
 ```python
 formula: Optional[str] = None
 min_energy: Optional[float] = None
 max_energy: Optional[float] = None
 min_submission_time: Optional[datetime.datetime] = None
 max_submission_time: Optional[datetime.datetime] = None
-page: int = 1
+offset: int = 0
+limit: int = 10
 ```
 The structure of the returned data is like
 ```
-{'page': 1, 'pageSize': 10, 'total': 59, 'items': [<__main__.CrystalStructure object at 0x7f84bb5319a0>, <__main__.CrystalStructure object at 0x7f84a9623850>, <__main__.CrystalStructure object at 0x7f84bb54eb20>, <__main__.CrystalStructure object at 0x7f84bb54edc0>, <__main__.CrystalStructure object at 0x7f84bb56f4f0>, <__main__.CrystalStructure object at 0x7f84bb56fbe0>, <__main__.CrystalStructure object at 0x7f84bb574310>, <__main__.CrystalStructure object at 0x7f84bb574a30>, <__main__.CrystalStructure object at 0x7f84bb583940>, <__main__.CrystalStructure object at 0x7f8478019dc0>]}
+{'nextStartId': 18, 'items': [<lam_optimize.db.CrystalStructure object at 0x7fbd6832e520>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d04aaf0>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d11c610>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d11cd60>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21a130>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21a4c0>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21a850>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21abe0>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21af70>, <lam_optimize.db.CrystalStructure object at 0x7fbd6d21d340>]}
 ```
-Except for the paging information, `items` is a list of `CrystalStructure` objects
+Except for `nextStartId` (used as `offset` in the next query), `items` is a list of `CrystalStructure` objects
 ```python
 class CrystalStructure:
     formula: str
