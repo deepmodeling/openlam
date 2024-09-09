@@ -5,7 +5,7 @@ from __future__ import annotations
 import ase.io
 from lam_optimize.db import CrystalStructure
 from lam_optimize.relaxer import Relaxer
-from lam_optimize.utils import get_e_form_per_atom, MATCHER
+from lam_optimize.utils import get_e_form_per_atom, validate_cif, MATCHER
 import logging
 import numpy as np
 import pandas as pd
@@ -15,13 +15,14 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from tqdm import tqdm
 import os
 import signal
+import traceback
 
 
 def sigalrm_handler(signum, frame):
     raise TimeoutError("Timeout to relax")
 
 
-def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, traj_file: Path=None, timeout: int=None, check_convergence: bool=True, check_duplicate: bool=True):
+def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, traj_file: Path=None, timeout: int=None, check_convergence: bool=True, check_duplicate: bool=True, validate: bool=True):
     """
     This is the main relaxation function
 
@@ -122,7 +123,14 @@ def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, tr
 
     os.makedirs("relaxed", exist_ok=True)
     for atoms in atoms_list:
-        ase.io.write(f"relaxed/final-{atoms.symbols}.cif", atoms, format='cif')
+        cif_file = f"relaxed/final-{atoms.symbols}.cif"
+        ase.io.write(cif_file, atoms, format='cif')
+        if validate:
+            try:
+                validate_cif(cif_file)
+            except Exception:
+                traceback.print_exc()
+                os.remove(cif_file)
 
     return df_out
 
