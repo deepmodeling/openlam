@@ -1,5 +1,7 @@
 from ase import Atoms
 from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.io.cif import CifParser
+from multiprocessing import Process
 from typing import Dict
 
 MATCHER = StructureMatcher(ltol=0.05, stol=0.1, angle_tol=5)
@@ -103,3 +105,24 @@ def get_e_form_per_atom(
     natoms = len(comp)
     e_form = energy - sum(ref[ele] for ele in comp)
     return e_form / natoms
+
+
+def read_file(fpth: str):
+    cif = CifParser(fpth)
+    # if cif.has_errors:
+    #     raise ValueError("CIF file is not valid.")
+    structure = cif.parse_structures(primitive=True)[0]
+    if cif.check(structure) is not None:
+        raise ValueError("CIF file is not valid.")
+    return structure
+
+
+def validate_cif(fpth: str, timeout: int=3):
+    p = Process(target=read_file, args=(fpth,))
+    p.start()
+    p.join(timeout)
+    if p.exitcode is None:
+        p.kill()
+        raise TimeoutError("Timeout to validate CIF file")
+    elif p.exitcode != 0:
+        raise ValueError("CIF file %s is not valid" % fpth)
