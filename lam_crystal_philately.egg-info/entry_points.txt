@@ -1,0 +1,2 @@
+[console_scripts]
+lam-opt = lam_optimize.entrypoint:main
