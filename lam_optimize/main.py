@@ -22,7 +22,7 @@ def sigalrm_handler(signum, frame):
     raise TimeoutError("Timeout to relax")
 
 
-def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, traj_file: Path=None, timeout: int=None, check_convergence: bool=True, check_duplicate: bool=True, validate: bool=True):
+def relax_run(fpth: Path, relaxer: Relaxer, fmax: float=1e-4, steps: int=200, traj_file: Path=None, timeout: int=None, check_convergence: bool=True, check_duplicate: bool=False, validate: bool=True):
     """
     This is the main relaxation function
 
