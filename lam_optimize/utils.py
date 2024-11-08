@@ -1,8 +1,16 @@
+import gzip
+import json
+import os
+import pickle
+import requests
+import shutil
 from ase import Atoms
+from pymatgen.analysis.phase_diagram import PDEntry, PhaseDiagram
 from pymatgen.analysis.structure_matcher import StructureMatcher
+from pymatgen.core import Composition, Element, Structure
 from pymatgen.io.cif import CifParser
 from multiprocessing import Process
-from typing import Dict
+from typing import Dict, List
 
 MATCHER = StructureMatcher(ltol=0.05, stol=0.1, angle_tol=5)
 ENERGY_REF = {
@@ -126,3 +134,57 @@ def validate_cif(fpth: str, timeout: int=3):
         raise TimeoutError("Timeout to validate CIF file")
     elif p.exitcode != 0:
         raise ValueError("CIF file %s is not valid" % fpth)
+
+
+def query_hull_url_by_composition(composition: str) -> str:
+    access_key = os.environ.get("BOHRIUM_ACCESS_KEY")
+    query_url = os.environ.get("OPENLAM_HULL_QUERY_URL", "http://openapi.dp.tech/openapi/v1/structures/query_hull_by_composition")
+    query_url += "/" + composition
+    headers = {
+        "Content-type": "application/json",
+    }
+    params = {
+        "accessKey": access_key,
+    }
+    rsp = requests.get(query_url, headers=headers, params=params)
+    if rsp.status_code != 200:
+        raise RuntimeError("Response code %s: %s" % (rsp.status_code, rsp.text))
+    res = json.loads(rsp.text)
+    if res["code"] == 148888:
+        raise RuntimeError("Hull of composition '%s' not found" % composition)
+    elif res["code"] != 0:
+        raise RuntimeError("Query error code %s: %s" % (res["code"], res["error"]["msg"]))
+    data = res["data"]
+    return data["hull"]
+
+
+def query_hull_by_composition(elements: List[str]) -> PhaseDiagram:
+    composition = "".join(map(str, sorted(map(Element, elements))))
+    hull_url = query_hull_url_by_composition(composition)
+    file_path = hull_url.split("?")[0].split("%2F")[-1]
+    sess = requests.session()
+    with sess.get(hull_url, stream=True, verify=False) as req:
+        req.raise_for_status()
+        with open(file_path, 'w') as f:
+            shutil.copyfileobj(req.raw, f.buffer)
+    with gzip.open(file_path, "rb") as zip_file:
+        pd_hull = pickle.load(zip_file)
+    os.remove(file_path)
+    return pd_hull
+
+
+def get_e_above_hull(structure: Structure, hull: PhaseDiagram, eform_per_atom: float) -> float:
+    reduced_formula = structure.composition.reduced_formula
+    natom_reduce_formula = structure.composition.reduced_composition.num_atoms
+    energy = eform_per_atom * natom_reduce_formula
+    entry = PDEntry(Composition(reduced_formula), energy)
+
+    try:
+        e_hull = hull.get_e_above_hull(entry)
+    except Exception as e:
+        if e.args[0].startswith("No valid decomposition found for PDEntry"):
+            e_hull = 0.0
+        else:
+            e_hull = None
+            raise RuntimeError("Error in getting energy above hull")
+    return e_hull

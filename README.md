@@ -127,3 +127,20 @@ structures = CrystalStructure.query(formula="Sr2YSbO6")
 which returns a list of `CrystalStructure` objects.
 
 NOTE: Calling non-paging method without query condition will be extremely slow.
+
+# Query hull from OpenLAM Database
+
+Set environmental variable `BOHRIUM_ACCESS_KEY` which is generated from https://bohrium.dp.tech/settings/user
+```
+export BOHRIUM_ACCESS_KEY=xxx
+```
+Query hull by composition from OpenLAM Database using Python API
+```python
+from lam_optimize.utils import query_hull_by_composition
+hull = query_hull_by_composition(["Ac", "Ag", "Bi", "As", "Rh", "Cl", "O"])
+```
+You can calculate energy above hull using the hull
+```python
+from lam_optimize.utils import get_e_above_hull
+ehull = get_e_above_hull(structure, hull, 0.123)
+```
