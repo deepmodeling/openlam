@@ -86,7 +86,7 @@ This returns the potential energy and forces for a given `.cif` structure.
 <img width="568" alt="image" src="https://github.com/deepmodeling/lam-crystal-philately/assets/137014849/6917528d-7e2a-4dc0-a49a-a87825983fba">
 
 
-# Query crystal structures from OpenLAM Database
+## Query crystal structures from OpenLAM Database
 
 Set environmental variable `BOHRIUM_ACCESS_KEY` which is generated from https://bohrium.dp.tech/settings/user
 ```
@@ -128,7 +128,7 @@ which returns a list of `CrystalStructure` objects.
 
 NOTE: Calling non-paging method without query condition will be extremely slow.
 
-# Query hull from OpenLAM Database
+## Query hull from OpenLAM Database
 
 Set environmental variable `BOHRIUM_ACCESS_KEY` which is generated from https://bohrium.dp.tech/settings/user
 ```
@@ -144,3 +144,5 @@ You can calculate energy above hull using the hull
 from lam_optimize.utils import get_e_above_hull
 ehull = get_e_above_hull(structure, hull, 0.123)
 ```
+To refer to OpenLAM Database in a publication, please cite the [preprint](https://arxiv.org/abs/2501.16358):
+> Anyang Peng, Xinzijian Liu, Ming-Yu Guo, Linfeng Zhang, Han Wang. "The OpenLAM Challenges." arXiv, January 20, 2025. https://doi.org/10.48550/arXiv.2501.16358.
